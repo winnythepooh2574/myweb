@@ -1,4 +1,456 @@
-<html>
-<title>myweb</title>
-<body>ยินดีต้อนรับสู่โลกของเรา</body>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BMI Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --pink-deep:    #c2185b;
+      --pink-mid:     #e91e8c;
+      --pink-soft:    #f48fb1;
+      --pink-light:   #fce4ec;
+      --pink-pale:    #fff0f6;
+      --pink-accent:  #ff4081;
+      --white:        #ffffff;
+      --text-dark:    #3b0a22;
+      --text-mid:     #7b3055;
+      --shadow:       0 20px 60px rgba(194,24,91,0.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Lato', sans-serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #fff0f6 40%, #ffd6e7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      overflow-x: hidden;
+    }
+
+    /* Decorative blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, #f48fb1, #e91e8c);
+      top: -140px; left: -140px;
+      animation: floatA 9s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, #ff80ab, #c2185b);
+      bottom: -120px; right: -120px;
+      animation: floatB 11s ease-in-out infinite alternate;
+    }
+    @keyframes floatA { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,40px) scale(1.1); } }
+    @keyframes floatB { from { transform: translate(0,0) scale(1); } to { transform: translate(-30px,-30px) scale(1.08); } }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-radius: 32px;
+      box-shadow: var(--shadow), 0 2px 0 rgba(255,255,255,0.9) inset;
+      border: 1.5px solid rgba(244,143,177,0.35);
+      overflow: hidden;
+      animation: slideUp 0.7s cubic-bezier(.22,.8,.36,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(48px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--pink-deep) 0%, var(--pink-mid) 60%, var(--pink-accent) 100%);
+      padding: 36px 40px 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -24px; left: 50%; transform: translateX(-50%);
+      width: 80%; height: 48px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(22px);
+      border-radius: 50%;
+      filter: blur(12px);
+    }
+    .header-icon {
+      font-size: 2.8rem;
+      margin-bottom: 8px;
+      display: block;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18));
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.08); }
+    }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: .5px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.15);
+    }
+    .header p {
+      color: rgba(255,255,255,0.82);
+      font-size: .92rem;
+      font-weight: 300;
+      margin-top: 6px;
+      letter-spacing: .4px;
+    }
+
+    /* Body */
+    .body { padding: 36px 40px 32px; }
+
+    .field { margin-bottom: 22px; }
+    .field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--text-mid);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrap input {
+      width: 100%;
+      padding: 14px 52px 14px 18px;
+      border: 2px solid var(--pink-soft);
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-family: 'Lato', sans-serif;
+      font-weight: 400;
+      color: var(--text-dark);
+      background: var(--pink-pale);
+      outline: none;
+      transition: border-color .25s, box-shadow .25s, background .25s;
+    }
+    .input-wrap input:focus {
+      border-color: var(--pink-mid);
+      background: var(--white);
+      box-shadow: 0 0 0 4px rgba(233,30,140,.10);
+    }
+    .input-wrap .unit {
+      position: absolute;
+      right: 16px;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--pink-deep);
+      pointer-events: none;
+    }
+
+    /* Gender toggle */
+    .gender-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .gender-btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 14px;
+      border: 2px solid var(--pink-soft);
+      background: var(--pink-pale);
+      color: var(--text-mid);
+      font-family: 'Lato', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .22s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .gender-btn.active {
+      background: linear-gradient(135deg, var(--pink-deep), var(--pink-mid));
+      color: var(--white);
+      border-color: transparent;
+      box-shadow: 0 6px 20px rgba(194,24,91,0.28);
+      transform: translateY(-2px);
+    }
+    .gender-btn:not(.active):hover {
+      border-color: var(--pink-mid);
+      background: var(--pink-light);
+    }
+
+    /* Calculate button */
+    .btn-calc {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--pink-deep) 0%, var(--pink-mid) 60%, var(--pink-accent) 100%);
+      color: var(--white);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.12rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(194,24,91,0.32);
+      transition: transform .2s, box-shadow .2s;
+      margin-top: 8px;
+    }
+    .btn-calc:hover  { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(194,24,91,0.38); }
+    .btn-calc:active { transform: translateY(0); }
+
+    /* Result card */
+    .result {
+      display: none;
+      margin-top: 28px;
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: resultIn .5s cubic-bezier(.22,.8,.36,1) both;
+    }
+    @keyframes resultIn {
+      from { opacity:0; transform:scale(.94) translateY(10px); }
+      to   { opacity:1; transform:scale(1)   translateY(0); }
+    }
+    .result.underweight { background: linear-gradient(135deg,#e3f2fd,#bbdefb); border: 2px solid #90caf9; }
+    .result.normal      { background: linear-gradient(135deg,#fce4ec,#f8bbd0); border: 2px solid var(--pink-soft); }
+    .result.overweight  { background: linear-gradient(135deg,#fff3e0,#ffe0b2); border: 2px solid #ffb74d; }
+    .result.obese       { background: linear-gradient(135deg,#fce4ec,#ef9a9a); border: 2px solid #ef5350; }
+
+    .result-emoji { font-size: 2.6rem; margin-bottom: 6px; }
+    .result-bmi {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.6rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .result.underweight .result-bmi { color: #1565c0; }
+    .result.normal      .result-bmi { color: var(--pink-deep); }
+    .result.overweight  .result-bmi { color: #e65100; }
+    .result.obese       .result-bmi { color: #b71c1c; }
+
+    .result-label {
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      opacity: .6;
+      margin-bottom: 10px;
+    }
+    .result-category {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .result.underweight .result-category { color: #1565c0; }
+    .result.normal      .result-category { color: var(--pink-deep); }
+    .result.overweight  .result-category { color: #e65100; }
+    .result.obese       .result-category { color: #b71c1c; }
+
+    .result-desc {
+      font-size: .88rem;
+      color: var(--text-mid);
+      line-height: 1.6;
+    }
+
+    /* BMI scale bar */
+    .scale-wrap { margin-top: 20px; }
+    .scale-track {
+      height: 10px;
+      border-radius: 99px;
+      background: linear-gradient(to right, #90caf9 0%, #81c784 25%, #ffb74d 60%, #ef5350 100%);
+      position: relative;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.10);
+    }
+    .scale-thumb {
+      position: absolute;
+      top: 50%; transform: translate(-50%,-50%);
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--pink-deep);
+      box-shadow: 0 2px 10px rgba(194,24,91,0.35);
+      transition: left .6s cubic-bezier(.22,.8,.36,1);
+    }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: .72rem;
+      color: var(--text-mid);
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 16px 40px 24px;
+      font-size: .78rem;
+      color: var(--pink-soft);
+      letter-spacing: .4px;
+    }
+
+    @media (max-width: 520px) {
+      .body  { padding: 28px 24px 24px; }
+      .header{ padding: 28px 24px 24px; }
+      .footer{ padding: 12px 24px 20px; }
+      .header h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Header -->
+  <div class="header">
+    <span class="header-icon">🌸</span>
+    <h1>BMI Calculator</h1>
+    <p>คำนวณดัชนีมวลกายของคุณ</p>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Gender -->
+    <div class="field">
+      <label>เพศ</label>
+      <div class="gender-row">
+        <button class="gender-btn active" id="btn-male" onclick="selectGender('male')">♂ ชาย</button>
+        <button class="gender-btn" id="btn-female" onclick="selectGender('female')">♀ หญิง</button>
+      </div>
+    </div>
+
+    <!-- Weight -->
+    <div class="field">
+      <label>น้ำหนัก</label>
+      <div class="input-wrap">
+        <input type="number" id="weight" placeholder="เช่น 65" min="1" max="300"/>
+        <span class="unit">กก.</span>
+      </div>
+    </div>
+
+    <!-- Height -->
+    <div class="field">
+      <label>ส่วนสูง</label>
+      <div class="input-wrap">
+        <input type="number" id="height" placeholder="เช่น 170" min="1" max="300"/>
+        <span class="unit">ซม.</span>
+      </div>
+    </div>
+
+    <!-- Button -->
+    <button class="btn-calc" onclick="calculate()">✨ คำนวณ BMI</button>
+
+    <!-- Result -->
+    <div class="result" id="result">
+      <div class="result-emoji" id="result-emoji"></div>
+      <div class="result-bmi" id="result-bmi"></div>
+      <div class="result-label">ค่า BMI ของคุณ</div>
+      <div class="result-category" id="result-category"></div>
+      <div class="result-desc" id="result-desc"></div>
+
+      <div class="scale-wrap">
+        <div class="scale-track">
+          <div class="scale-thumb" id="scale-thumb" style="left:0%"></div>
+        </div>
+        <div class="scale-labels">
+          <span>ผอม<br/>&lt;18.5</span>
+          <span>ปกติ<br/>18.5–22.9</span>
+          <span>น้ำหนักเกิน<br/>23–29.9</span>
+          <span>อ้วน<br/>≥30</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">🌸 ค่า BMI เป็นเพียงการประมาณเบื้องต้น ควรปรึกษาแพทย์เพื่อผลที่แม่นยำ</div>
+</div>
+
+<script>
+  let gender = 'male';
+
+  function selectGender(g) {
+    gender = g;
+    document.getElementById('btn-male').classList.toggle('active', g === 'male');
+    document.getElementById('btn-female').classList.toggle('active', g === 'female');
+  }
+
+  function calculate() {
+    const w = parseFloat(document.getElementById('weight').value);
+    const h = parseFloat(document.getElementById('height').value);
+    const resultEl = document.getElementById('result');
+
+    if (!w || !h || w <= 0 || h <= 0) {
+      resultEl.style.display = 'none';
+      alert('กรุณากรอกน้ำหนักและส่วนสูงให้ถูกต้อง');
+      return;
+    }
+
+    const hm = h / 100;
+    const bmi = w / (hm * hm);
+    const bmiRound = bmi.toFixed(1);
+
+    // WHO Asia-Pacific cutoffs
+    let cls, emoji, category, desc;
+    if (bmi < 18.5) {
+      cls = 'underweight'; emoji = '🌱';
+      category = 'น้ำหนักน้อยเกินไป';
+      desc = 'ร่างกายอาจขาดสารอาหาร ควรรับประทานอาหารที่มีประโยชน์และครบถ้วน';
+    } else if (bmi < 23) {
+      cls = 'normal'; emoji = '💖';
+      category = 'น้ำหนักปกติ';
+      desc = 'สุขภาพดีเยี่ยม! รักษาพฤติกรรมการกินและออกกำลังกายอย่างสม่ำเสมอต่อไปเลย ✨';
+    } else if (bmi < 30) {
+      cls = 'overweight'; emoji = '🌸';
+      category = 'น้ำหนักเกิน';
+      desc = 'ควรปรับพฤติกรรมการกินและเพิ่มการออกกำลังกายเพื่อสุขภาพที่ดียิ่งขึ้น';
+    } else {
+      cls = 'obese'; emoji = '💪';
+      category = 'โรคอ้วน';
+      desc = 'ควรปรึกษาแพทย์หรือผู้เชี่ยวชาญด้านโภชนาการเพื่อวางแผนดูแลสุขภาพอย่างเหมาะสม';
+    }
+
+    document.getElementById('result-emoji').textContent = emoji;
+    document.getElementById('result-bmi').textContent = bmiRound;
+    document.getElementById('result-category').textContent = category;
+    document.getElementById('result-desc').textContent = desc;
+
+    resultEl.className = 'result ' + cls;
+    resultEl.style.display = 'block';
+
+    // Scale thumb position (BMI 10 → 0%, BMI 40 → 100%)
+    const pct = Math.min(Math.max(((bmi - 10) / 30) * 100, 2), 98);
+    setTimeout(() => {
+      document.getElementById('scale-thumb').style.left = pct + '%';
+    }, 100);
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+</script>
+</body>
 </html>
